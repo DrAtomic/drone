@@ -1,0 +1,4 @@
+build
+*.el
+.cache
+sdkconfig.old
