@@ -2,3 +2,4 @@ build
 *.el
 .cache
 sdkconfig.old
+compile_commands.json
