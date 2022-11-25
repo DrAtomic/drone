@@ -24,23 +24,33 @@ static TaskHandle_t task1;
 
 static const BaseType_t app_cpu = 0;
 
-void toggle_LEDs0(void *parameters)
+struct arg_struct {
+	gpio_num_t gpio;
+	int delay;
+};
+
+void toggle_LEDs(void *parameters)
 {
+	struct arg_struct arg = *(struct arg_struct *)parameters;
+
 	while (1) {
-		gpio_set_level(BLINK_GPIO0, 0);
-		vTaskDelay(100);
-		gpio_set_level(BLINK_GPIO0, 1);
-		vTaskDelay(100);
+		gpio_set_level(arg.gpio, 0);
+		vTaskDelay(arg.delay);
+		gpio_set_level(arg.gpio, 1);
+		vTaskDelay(arg.delay);
 	}
 }
 
 static void setup(void)
 {
+	static struct arg_struct arg;
+	arg.gpio = BLINK_GPIO1;
+	arg.delay = 100;
 	gpio_set_direction(BLINK_GPIO0, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO1, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO2, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO3, GPIO_MODE_OUTPUT);
-	xTaskCreatePinnedToCore(toggle_LEDs0, "task1", 1204, NULL, 1, &task1, app_cpu);
+	xTaskCreatePinnedToCore(toggle_LEDs, "task1", 1204, (void *)&arg, 1, &task1, app_cpu);
 }
 
 void app_main(void)
