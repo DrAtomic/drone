@@ -20,7 +20,7 @@
 #define BLINK_GPIO2 GPIO_NUM_19
 #define BLINK_GPIO3 GPIO_NUM_21
 
-static TaskHandle_t task1, task2;
+static TaskHandle_t task1, task2, task3, task4;
 
 static const BaseType_t app_cpu = 0;
 
@@ -43,16 +43,24 @@ void toggle_LEDs(void *parameters)
 
 static void create_tasks()
 {
-	static struct arg_struct arg1, arg2;
+	static struct arg_struct arg1, arg2, arg3, arg4;
 
-	arg1.gpio = BLINK_GPIO1;
+	arg1.gpio = BLINK_GPIO0;
 	arg1.delay = 100;
 
-	arg2.gpio = BLINK_GPIO3;
+	arg2.gpio = BLINK_GPIO1;
 	arg2.delay = 150;
+
+	arg3.gpio = BLINK_GPIO2;
+	arg3.delay = 200;
+
+	arg4.gpio = BLINK_GPIO3;
+	arg4.delay = 50;
 
 	xTaskCreatePinnedToCore(toggle_LEDs, "task1", 1204, (void *)&arg1, 1, &task1, app_cpu);
 	xTaskCreatePinnedToCore(toggle_LEDs, "task2", 1204, (void *)&arg2, 1, &task2, app_cpu);
+	xTaskCreatePinnedToCore(toggle_LEDs, "task3", 1204, (void *)&arg3, 1, &task3, app_cpu);
+	xTaskCreatePinnedToCore(toggle_LEDs, "task4", 1204, (void *)&arg4, 1, &task4, app_cpu);
 
 }
 
