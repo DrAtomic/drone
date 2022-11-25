@@ -41,7 +41,7 @@ void toggle_LEDs(void *parameters)
 	}
 }
 
-static void setup(void)
+static void create_tasks()
 {
 	static struct arg_struct arg1, arg2;
 
@@ -51,16 +51,21 @@ static void setup(void)
 	arg2.gpio = BLINK_GPIO3;
 	arg2.delay = 150;
 
+	xTaskCreatePinnedToCore(toggle_LEDs, "task1", 1204, (void *)&arg1, 1, &task1, app_cpu);
+	xTaskCreatePinnedToCore(toggle_LEDs, "task2", 1204, (void *)&arg2, 1, &task2, app_cpu);
+
+}
+
+static void setup(void)
+{
 	gpio_set_direction(BLINK_GPIO0, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO1, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO2, GPIO_MODE_OUTPUT);
 	gpio_set_direction(BLINK_GPIO3, GPIO_MODE_OUTPUT);
-
-	xTaskCreatePinnedToCore(toggle_LEDs, "task1", 1204, (void *)&arg1, 1, &task1, app_cpu);
-	xTaskCreatePinnedToCore(toggle_LEDs, "task2", 1204, (void *)&arg2, 1, &task2, app_cpu);
 }
 
 void app_main(void)
 {
 	setup();
+	create_tasks();
 }
