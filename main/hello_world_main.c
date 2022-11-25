@@ -12,32 +12,38 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
+#include "driver/gpio.h"
+#include "esp_log.h"
+
+#define BLINK_GPIO0 GPIO_NUM_5
+#define BLINK_GPIO1 GPIO_NUM_18
+#define BLINK_GPIO2 GPIO_NUM_19
+#define BLINK_GPIO3 GPIO_NUM_21
+
+static TaskHandle_t task1;
+
+static const BaseType_t app_cpu = 0;
+
+void toggle_LEDs0(void *parameters)
+{
+	while (1) {
+		gpio_set_level(BLINK_GPIO0, 0);
+		vTaskDelay(100);
+		gpio_set_level(BLINK_GPIO0, 1);
+		vTaskDelay(100);
+	}
+}
+
+static void setup(void)
+{
+	gpio_set_direction(BLINK_GPIO0, GPIO_MODE_OUTPUT);
+	gpio_set_direction(BLINK_GPIO1, GPIO_MODE_OUTPUT);
+	gpio_set_direction(BLINK_GPIO2, GPIO_MODE_OUTPUT);
+	gpio_set_direction(BLINK_GPIO3, GPIO_MODE_OUTPUT);
+	xTaskCreatePinnedToCore(toggle_LEDs0, "task1", 1204, NULL, 1, &task1, app_cpu);
+}
 
 void app_main(void)
 {
-    printf("Hello world!\n");
-
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is %s chip with %d CPU core(s), WiFi%s%s, ",
-	   CONFIG_IDF_TARGET,
-	   chip_info.cores,
-	   (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-	   (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    printf("silicon revision %d, ", chip_info.revision);
-
-    printf("%dMB %s flash\n", (int)spi_flash_get_chip_size() / (1024 * 1024),
-	   (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-
-    printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
-
-    for (int i = 10; i >= 0; i--) {
-	    printf("Restarting in %d seconds...\n", i);
-	    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+	setup();
 }
