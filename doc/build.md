@@ -8,7 +8,7 @@ I use the build scripts to use in emacs `M-x compile` from any directory and it 
 for emacs users make a file called dir-locals.el and put this in 
 
 ```emacs-lisp
-((c-mode . ((compile-command . "./build.sh"))))
+((nil . ((projectile-project-compilation-cmd . "./build.sh"))))
 ```
 
 now you can compile from any c source file
