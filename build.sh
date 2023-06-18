@@ -7,6 +7,7 @@ BUILD_DIR="build"
 
 if [ -z "${IDF_PATH}" ]
 then
+    echo "idf not in environment"
     exit 1
 fi
 
