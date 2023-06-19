@@ -34,4 +34,6 @@
 void mpu6050_setup();
 void peek_pwr_config(uint8_t *data);
 
+int add(int a, int b);
+
 #endif /* MPU6050_H */

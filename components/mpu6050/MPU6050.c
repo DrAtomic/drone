@@ -11,6 +11,11 @@
 #define I2C_MASTER_RX_BUF_DISABLE 0
 #define I2C_MASTER_TX_BUF_DISABLE 0
 
+int add(int a, int b)
+{
+	return a + b;
+}
+
 static esp_err_t mpu6050_register_write_byte(uint8_t reg_addr, uint8_t data)
 {
     int ret;
