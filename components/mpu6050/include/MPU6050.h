@@ -2,6 +2,7 @@
 #define MPU6050_H
 
 #include <stdint.h>
+#include <stdint.h>
 
 #define MPU6050_SENSOR_ADDR		0x68
 #define MPU6050_WHO_AM_I_REG		0x75
@@ -9,6 +10,18 @@
 #define MPU6050_PWR_MGMT_1_REG		0x6B
 #define MPU6050_ACCEL_CONFIG_REG	0x1C
 #define MPU6050_GYRO_CONFIG_REG	0x1B
+#define MPU6050_ACCEL_XOUT_H_REG	0x3B
+#define MPU6050_ACCEL_XOUT_L_REG	0x3C
+#define MPU6050_ACCEL_YOUT_H_REG	0x3D
+#define MPU6050_ACCEL_YOUT_L_REG	0x3E
+#define MPU6050_ACCEL_ZOUT_H_REG	0x3F
+#define MPU6050_ACCEL_ZOUT_L_REG	0x40
+#define MPU6050_GYRO_XOUT_H_REG	0x43
+#define MPU6050_GYRO_XOUT_L_REG	0x44
+#define MPU6050_GYRO_YOUT_H_REG	0x45
+#define MPU6050_GYRO_YOUT_L_REG	0x46
+#define MPU6050_GYRO_ZOUT_H_REG	0x47
+#define MPU6050_GYRO_ZOUT_L_REG	0x48
 
 #define MPU6050_RESET_BIT		7
 #define MPU6050_SLEEP_BIT		6
@@ -31,9 +44,32 @@
 #define MPU6050_8G_AFS_SEL_VAL		2
 #define MPU6050_16G_AFS_SEL_VAL	3
 
-void mpu6050_setup();
-void peek_pwr_config(uint8_t *data);
+#define LSB_SENSITIVITY_ACCEL_2G	16384.0
+#define LSB_SENSITIVITY_ACCEL_4G	8192.0
+#define LSB_SENSITIVITY_ACCEL_8G	4096.0
+#define LSB_SENSITIVITY_ACCEL_16G	2048.0
+#define LSB_SENSITIVITY_GYRO_250FS	131.0
+#define LSB_SENSITIVITY_GYRO_500FS	65.5
+#define LSB_SENSITIVITY_GYRO_1000FS	32.8
+#define LSB_SENSITIVITY_GYRO_2000FS	16.4
 
+typedef struct accel_data_type {
+	int16_t x;
+	int16_t y;
+	int16_t z;
+} ACCEL_DATA_TYPE;
+
+typedef struct gyro_data_type {
+	int16_t x;
+	int16_t y;
+	int16_t z;
+} GYRO_DATA_TYPE;
+
+void mpu6050_setup();
+void get_accel_data(ACCEL_DATA_TYPE *ad);
+void get_gyro_data(GYRO_DATA_TYPE *gd);
+
+/* for testing */
 int add(int a, int b);
 
 #endif /* MPU6050_H */

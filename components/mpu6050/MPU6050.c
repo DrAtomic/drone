@@ -129,8 +129,107 @@ void mpu6050_setup()
 	mpu6050_wakeup();
 }
 
-void peek_pwr_config(uint8_t *data)
+static int16_t read_x_accel()
 {
+	uint8_t data = {0};
 	size_t len = 1;
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, data, len));
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+static int16_t read_y_accel()
+{
+	uint8_t data = {0};
+	size_t len = 1;
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_YOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_YOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+static int16_t read_z_accel()
+{
+	uint8_t data = {0};
+	size_t len = 1;
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_ZOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_ZOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+void get_accel_data(ACCEL_DATA_TYPE *ad)
+{
+	ad->x = read_x_accel();
+	ad->y = read_y_accel();
+	ad->z = read_z_accel();
+}
+
+static int16_t read_x_gyro()
+{
+	uint8_t data = {0};
+	size_t len = 1;
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_XOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_XOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+static int16_t read_y_gyro()
+{
+	uint8_t data = {0};
+	size_t len = 1;
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_YOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_YOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+static int16_t read_z_gyro()
+{
+	uint8_t data = {0};
+	size_t len = 1;
+	int16_t ret = {0};
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_ZOUT_H_REG, &data, len));
+	ret |= (data << 8);
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_ZOUT_L_REG, &data, len));
+	ret |= data;
+
+	return ret;
+}
+
+
+void get_gyro_data(GYRO_DATA_TYPE *gd)
+{
+	gd->x = read_x_gyro();
+	gd->y = read_y_gyro();
+	gd->z = read_z_gyro();
 }
