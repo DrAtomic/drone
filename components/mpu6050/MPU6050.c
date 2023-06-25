@@ -43,11 +43,11 @@ static esp_err_t mpu6050_register_read(uint8_t reg_addr, uint8_t *data, size_t l
 
 static void mpu6050_check()
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_WHO_AM_I_REG, data, len));
-	if (*data != MPU6050_WHO_AM_I_VAL) {
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_WHO_AM_I_REG, &data, len));
+	if (data != MPU6050_WHO_AM_I_VAL) {
 		printf("error: not an mpu6050\n");
 		exit(1);
 	}
@@ -55,52 +55,52 @@ static void mpu6050_check()
 
 static void mpu6050_reset()
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, data, len));
-	*data |= (1 << MPU6050_RESET_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, *data));
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
+	data |= (1 << MPU6050_RESET_BIT);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
 }
 
 static void mpu6050_set_clock(uint8_t clk_val)
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, data, len));
-	*data |= (clk_val << MPU6050_CLK_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, *data));
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
+	data |= (clk_val << MPU6050_CLK_SEL_BIT);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
 }
 
 static void mpu6050_set_gyroscope_range(uint8_t fs_sel_val)
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_CONFIG_REG, data, len));
-	*data |= (fs_sel_val << MPU6050_FS_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_GYRO_CONFIG_REG, *data));
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_CONFIG_REG, &data, len));
+	data |= (fs_sel_val << MPU6050_FS_SEL_BIT);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_GYRO_CONFIG_REG, data));
 }
 
 static void mpu6050_set_accel_range(uint8_t afs_sel_val)
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_CONFIG_REG, data, len));
-	*data |= (afs_sel_val << MPU6050_AFS_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_ACCEL_CONFIG_REG, *data));
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_CONFIG_REG, &data, len));
+	data |= (afs_sel_val << MPU6050_AFS_SEL_BIT);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_ACCEL_CONFIG_REG, data));
 }
 
 static void mpu6050_wakeup()
 {
-	uint8_t data[2] = {0};
+	uint8_t data = {0};
 	size_t len = 1;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, data, len));
-	*data &= ~(1 << MPU6050_SLEEP_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, *data));
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
+	data &= ~(1 << MPU6050_SLEEP_BIT);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
 }
 
 void mpu6050_setup()

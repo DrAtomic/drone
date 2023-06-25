@@ -1,6 +1,6 @@
 build
 *.el
 .cache
-sdkconfig.old
+*sdkconfig*
 compile_commands.json
 .clangd
