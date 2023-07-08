@@ -41,9 +41,28 @@ static esp_err_t mpu6050_register_read(uint8_t reg_addr, uint8_t *data, size_t l
 					    I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
+static inline uint8_t make_mask(uint8_t start_bit, size_t mask_len)
+{
+	uint8_t ret = 0;
+	for (int i = 0; i < mask_len; i++)
+		ret |= 1 << (start_bit + i);
+	return ret;
+}
+
+void set_register(uint8_t reg_addr, uint8_t start_bit, uint8_t val, size_t mask_len)
+{
+	uint8_t mask = 0;
+	uint8_t data = 0;
+	ESP_ERROR_CHECK(mpu6050_register_read(reg_addr, &data, 1));
+	mask = make_mask(start_bit, mask_len);
+	data &= ~(mask);
+	data |= (val << start_bit);
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(reg_addr, data));
+}
+
 static void mpu6050_check()
 {
-	uint8_t data = {0};
+	uint8_t data = 0;
 	size_t len = 1;
 
 	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_WHO_AM_I_REG, &data, len));
@@ -55,52 +74,27 @@ static void mpu6050_check()
 
 static void mpu6050_reset()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
-	data |= (1 << MPU6050_RESET_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
+	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_RESET_BIT, MPU6050_RESET_VAL, 1);
 }
 
 static void mpu6050_set_clock(uint8_t clk_val)
 {
-	uint8_t data = {0};
-	size_t len = 1;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
-	data |= (clk_val << MPU6050_CLK_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
+	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_CLK_SEL_BIT, clk_val, MPU6050_CLK_SEL_FIELD_LEN);
 }
 
 static void mpu6050_set_gyroscope_range(uint8_t fs_sel_val)
 {
-	uint8_t data = {0};
-	size_t len = 1;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_CONFIG_REG, &data, len));
-	data |= (fs_sel_val << MPU6050_FS_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_GYRO_CONFIG_REG, data));
+	set_register(MPU6050_GYRO_CONFIG_REG, MPU6050_FS_SEL_BIT, fs_sel_val, MPU6050_FS_SEL_FIELD_LEN);
 }
 
 static void mpu6050_set_accel_range(uint8_t afs_sel_val)
 {
-	uint8_t data = {0};
-	size_t len = 1;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_CONFIG_REG, &data, len));
-	data |= (afs_sel_val << MPU6050_AFS_SEL_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_ACCEL_CONFIG_REG, data));
+	set_register(MPU6050_ACCEL_CONFIG_REG, MPU6050_AFS_SEL_BIT, afs_sel_val, MPU6050_AFS_SEL_FIELD_LEN);
 }
 
 static void mpu6050_wakeup()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_PWR_MGMT_1_REG, &data, len));
-	data &= ~(1 << MPU6050_SLEEP_BIT);
-	ESP_ERROR_CHECK(mpu6050_register_write_byte(MPU6050_PWR_MGMT_1_REG, data));
+	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_SLEEP_BIT, 0, 1);
 }
 
 void mpu6050_setup()
@@ -129,49 +123,32 @@ void mpu6050_setup()
 	mpu6050_wakeup();
 }
 
-static int16_t read_x_accel()
+static int16_t read_16bit_reg(uint8_t reg_addr_H)
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
+	uint8_t data[2] = {0};
+	size_t len = 2;
+	int16_t ret = 0;
 
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_L_REG, &data, len));
-	ret |= data;
+	ESP_ERROR_CHECK(mpu6050_register_read(reg_addr_H, data, len));
+	ret |= (data[0] << 8);
+	ret |= data[1];
 
 	return ret;
+}
+
+static int16_t read_x_accel()
+{
+	return read_16bit_reg(MPU6050_ACCEL_XOUT_H_REG);
 }
 
 static int16_t read_y_accel()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_YOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_YOUT_L_REG, &data, len));
-	ret |= data;
-
-	return ret;
+	return read_16bit_reg(MPU6050_ACCEL_YOUT_H_REG);
 }
 
 static int16_t read_z_accel()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_ZOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_ZOUT_L_REG, &data, len));
-	ret |= data;
-
-	return ret;
+	return read_16bit_reg(MPU6050_ACCEL_ZOUT_H_REG);
 }
 
 void get_accel_data(ACCEL_DATA_TYPE *ad)
@@ -183,47 +160,17 @@ void get_accel_data(ACCEL_DATA_TYPE *ad)
 
 static int16_t read_x_gyro()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_XOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_XOUT_L_REG, &data, len));
-	ret |= data;
-
-	return ret;
+	return read_16bit_reg(MPU6050_GYRO_XOUT_H_REG);
 }
 
 static int16_t read_y_gyro()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_YOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_YOUT_L_REG, &data, len));
-	ret |= data;
-
-	return ret;
+	return read_16bit_reg(MPU6050_GYRO_YOUT_H_REG);
 }
 
 static int16_t read_z_gyro()
 {
-	uint8_t data = {0};
-	size_t len = 1;
-	int16_t ret = {0};
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_ZOUT_H_REG, &data, len));
-	ret |= (data << 8);
-
-	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_GYRO_ZOUT_L_REG, &data, len));
-	ret |= data;
-
-	return ret;
+	return read_16bit_reg(MPU6050_GYRO_ZOUT_H_REG);
 }
 
 
@@ -232,4 +179,10 @@ void get_gyro_data(GYRO_DATA_TYPE *gd)
 	gd->x = read_x_gyro();
 	gd->y = read_y_gyro();
 	gd->z = read_z_gyro();
+}
+
+void peek_reg(uint8_t reg, uint8_t *data)
+{
+	ESP_ERROR_CHECK(mpu6050_register_read(reg, data, 1));
+
 }

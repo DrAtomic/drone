@@ -2,11 +2,13 @@
 #define MPU6050_H
 
 #include <stdint.h>
-#include <stdint.h>
 
 #define MPU6050_SENSOR_ADDR		0x68
+
+#define MPU6050_FIFO_EN_REG		0x23
+#define MPU6050_SMPRT_DIV_REG		0x25
 #define MPU6050_WHO_AM_I_REG		0x75
-#define MPU6050_WHO_AM_I_VAL		0x68
+#define MPU6050_USR_CTRL_REG		0x6A
 #define MPU6050_PWR_MGMT_1_REG		0x6B
 #define MPU6050_ACCEL_CONFIG_REG	0x1C
 #define MPU6050_GYRO_CONFIG_REG	0x1B
@@ -22,12 +24,34 @@
 #define MPU6050_GYRO_YOUT_L_REG	0x46
 #define MPU6050_GYRO_ZOUT_H_REG	0x47
 #define MPU6050_GYRO_ZOUT_L_REG	0x48
+#define MPU6050_FIFO_R_W_REG		0x74
+#define MPU6050_FIFO_COUNT_H_REG	0x72
+#define MPU6050_FIFO_COUNT_L_REG	0x73
 
 #define MPU6050_RESET_BIT		7
 #define MPU6050_SLEEP_BIT		6
+#define MPU6050_FIFO_EN_BIT		6
+#define MPU6050_FIFO_RESET_BIT		2
 #define MPU6050_FS_SEL_BIT		3
 #define MPU6050_AFS_SEL_BIT		3
 #define MPU6050_CLK_SEL_BIT		0
+
+#define MPU6050_CLK_SEL_FIELD_LEN	3
+#define MPU6050_FS_SEL_FIELD_LEN	2
+#define MPU6050_AFS_SEL_FIELD_LEN	2
+
+#define MPU6050_TEMP_FIFO_EN_BIT	7
+#define MPU6050_XG_FIFO_EN_BIT		6
+#define MPU6050_YG_FIFO_EN_BIT		5
+#define MPU6050_ZG_FIFO_EN_BIT		4
+#define MPU6050_ACCEL_FIFO_EN_BIT	3
+#define MPU6050_SLV2_FIFO_EN_BIT	2
+#define MPU6050_SLV1_FIFO_EN_BIT	1
+#define MPU6050_SLV0_FIFO_EN_BIT	0
+
+#define MPU6050_WHO_AM_I_VAL		0x68
+
+#define MPU6050_RESET_VAL		1
 
 #define MPU6050_INTERNAL_PLL_VAL	0
 #define MPU6050_X_PLL_VAL		1
@@ -70,6 +94,7 @@ void get_accel_data(ACCEL_DATA_TYPE *ad);
 void get_gyro_data(GYRO_DATA_TYPE *gd);
 
 /* for testing */
+void peek_reg(uint8_t reg, uint8_t *data);
 int add(int a, int b);
 
 #endif /* MPU6050_H */
