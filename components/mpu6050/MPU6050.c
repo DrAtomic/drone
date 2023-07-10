@@ -18,16 +18,13 @@ int add(int a, int b)
 
 static esp_err_t mpu6050_register_write_byte(uint8_t reg_addr, uint8_t data)
 {
-    int ret;
-    uint8_t write_buf[2] = {reg_addr, data};
+	uint8_t write_buf[2] = {reg_addr, data};
 
-    ret = i2c_master_write_to_device(I2C_MASTER_NUM,
-				     MPU6050_SENSOR_ADDR,
-				     write_buf,
-				     sizeof(write_buf),
-				     I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-
-    return ret;
+	return i2c_master_write_to_device(I2C_MASTER_NUM,
+					  MPU6050_SENSOR_ADDR,
+					  write_buf,
+					  sizeof(write_buf),
+					  I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 static esp_err_t mpu6050_register_read(uint8_t reg_addr, uint8_t *data, size_t len)
@@ -49,7 +46,7 @@ static inline uint8_t make_mask(uint8_t start_bit, size_t mask_len)
 	return ret;
 }
 
-void set_register(uint8_t reg_addr, uint8_t start_bit, uint8_t val, size_t mask_len)
+static void set_register_field(uint8_t reg_addr, uint8_t start_bit, uint8_t val, size_t mask_len)
 {
 	uint8_t mask = 0;
 	uint8_t data = 0;
@@ -58,6 +55,11 @@ void set_register(uint8_t reg_addr, uint8_t start_bit, uint8_t val, size_t mask_
 	data &= ~(mask);
 	data |= (val << start_bit);
 	ESP_ERROR_CHECK(mpu6050_register_write_byte(reg_addr, data));
+}
+
+static void set_register(uint8_t reg_addr, uint8_t val)
+{
+	ESP_ERROR_CHECK(mpu6050_register_write_byte(reg_addr, val));
 }
 
 static void mpu6050_check()
@@ -74,27 +76,53 @@ static void mpu6050_check()
 
 static void mpu6050_reset()
 {
-	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_RESET_BIT, MPU6050_RESET_VAL, 1);
+	set_register_field(MPU6050_PWR_MGMT_1_REG, MPU6050_RESET_BIT, MPU6050_RESET_VAL, 1);
 }
 
 static void mpu6050_set_clock(uint8_t clk_val)
 {
-	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_CLK_SEL_BIT, clk_val, MPU6050_CLK_SEL_FIELD_LEN);
+	set_register_field(MPU6050_PWR_MGMT_1_REG,
+			   MPU6050_CLK_SEL_BIT,
+			   clk_val,
+			   MPU6050_CLK_SEL_FIELD_LEN);
 }
 
 static void mpu6050_set_gyroscope_range(uint8_t fs_sel_val)
 {
-	set_register(MPU6050_GYRO_CONFIG_REG, MPU6050_FS_SEL_BIT, fs_sel_val, MPU6050_FS_SEL_FIELD_LEN);
+	set_register_field(MPU6050_GYRO_CONFIG_REG,
+			   MPU6050_FS_SEL_BIT,
+			   fs_sel_val,
+			   MPU6050_FS_SEL_FIELD_LEN);
 }
 
 static void mpu6050_set_accel_range(uint8_t afs_sel_val)
 {
-	set_register(MPU6050_ACCEL_CONFIG_REG, MPU6050_AFS_SEL_BIT, afs_sel_val, MPU6050_AFS_SEL_FIELD_LEN);
+	set_register_field(MPU6050_ACCEL_CONFIG_REG,
+			   MPU6050_AFS_SEL_BIT,
+			   afs_sel_val,
+			   MPU6050_AFS_SEL_FIELD_LEN);
 }
 
 static void mpu6050_wakeup()
 {
-	set_register(MPU6050_PWR_MGMT_1_REG, MPU6050_SLEEP_BIT, 0, 1);
+	set_register_field(MPU6050_PWR_MGMT_1_REG, MPU6050_SLEEP_BIT, 0, 1);
+}
+
+static void mpu6050_set_fifo()
+{
+	uint8_t data = 0;
+
+	set_register_field(MPU6050_SMPRT_DIV_REG, 0, 0xff, 1);
+
+	data = (1 << MPU6050_ACCEL_FIFO_EN_BIT)
+		| (1 << MPU6050_XG_FIFO_EN_BIT)
+		| (1 << MPU6050_YG_FIFO_EN_BIT)
+		| (1 << MPU6050_ZG_FIFO_EN_BIT);
+	set_register(MPU6050_FIFO_EN_REG, data);
+
+	set_register(MPU6050_USR_CTRL_REG,
+		     (1 << MPU6050_FIFO_EN_BIT)
+		     | (1 << MPU6050_FIFO_RESET_BIT));
 }
 
 void mpu6050_setup()
@@ -121,13 +149,14 @@ void mpu6050_setup()
 	mpu6050_set_gyroscope_range(MPU6050_500_FS_SEL_VAL);
 	mpu6050_set_accel_range(MPU6050_2G_AFS_SEL_VAL);
 	mpu6050_wakeup();
+	mpu6050_set_fifo();
 }
 
-static int16_t read_16bit_reg(uint8_t reg_addr_H)
+static uint16_t read_16bit_reg(uint8_t reg_addr_H)
 {
 	uint8_t data[2] = {0};
 	size_t len = 2;
-	int16_t ret = 0;
+	uint16_t ret = 0;
 
 	ESP_ERROR_CHECK(mpu6050_register_read(reg_addr_H, data, len));
 	ret |= (data[0] << 8);
@@ -158,6 +187,13 @@ void get_accel_data(ACCEL_DATA_TYPE *ad)
 	ad->z = read_z_accel();
 }
 
+void clear_accel_data(ACCEL_DATA_TYPE *ad)
+{
+	ad->x = 0;
+	ad->y = 0;
+	ad->z = 0;
+}
+
 static int16_t read_x_gyro()
 {
 	return read_16bit_reg(MPU6050_GYRO_XOUT_H_REG);
@@ -173,7 +209,6 @@ static int16_t read_z_gyro()
 	return read_16bit_reg(MPU6050_GYRO_ZOUT_H_REG);
 }
 
-
 void get_gyro_data(GYRO_DATA_TYPE *gd)
 {
 	gd->x = read_x_gyro();
@@ -181,8 +216,42 @@ void get_gyro_data(GYRO_DATA_TYPE *gd)
 	gd->z = read_z_gyro();
 }
 
+void clear_gyro_data(GYRO_DATA_TYPE *gd)
+{
+	gd->x = 0;
+	gd->y = 0;
+	gd->z = 0;
+}
+
 void peek_reg(uint8_t reg, uint8_t *data)
 {
 	ESP_ERROR_CHECK(mpu6050_register_read(reg, data, 1));
+}
 
+void get_fifo_count(size_t *fifo_count)
+{
+	*fifo_count = (size_t)read_16bit_reg(MPU6050_FIFO_COUNT_H_REG);
+}
+
+static void clear_fifo_data()
+{
+	mpu6050_register_write_byte(MPU6050_USR_CTRL_REG,
+				    (1 << MPU6050_FIFO_RESET_BIT)
+				    | (1 << MPU6050_FIFO_EN_BIT));
+}
+
+void get_accel_and_gyro_from_fifo(GYRO_DATA_TYPE *gd, ACCEL_DATA_TYPE *ad)
+{
+	uint8_t data[BURST_LEN] = {0};
+
+	mpu6050_register_read(MPU6050_FIFO_R_W_REG, data, BURST_LEN);
+	clear_fifo_data();
+
+	ad->x |= (data[0] << 8) | data[1];
+	ad->y |= (data[2] << 8) | data[3];
+	ad->z |= (data[4] << 8) | data[5];
+
+	gd->x |= (data[6] << 8) | data[7];
+	gd->y |= (data[8] << 8) | data[9];
+	gd->z |= (data[10] << 8) | data[11];
 }

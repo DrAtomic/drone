@@ -2,6 +2,9 @@
 #define MPU6050_H
 
 #include <stdint.h>
+#include <stddef.h>
+
+#define BURST_LEN 12
 
 #define MPU6050_SENSOR_ADDR		0x68
 
@@ -91,10 +94,13 @@ typedef struct gyro_data_type {
 
 void mpu6050_setup();
 void get_accel_data(ACCEL_DATA_TYPE *ad);
+void clear_accel_data(ACCEL_DATA_TYPE *ad);
 void get_gyro_data(GYRO_DATA_TYPE *gd);
+void clear_gyro_data(GYRO_DATA_TYPE *gd);
+void get_accel_and_gyro_from_fifo(GYRO_DATA_TYPE *gd, ACCEL_DATA_TYPE *ad);
 
 /* for testing */
 void peek_reg(uint8_t reg, uint8_t *data);
 int add(int a, int b);
-
+void get_fifo_count(size_t *fifo_count);
 #endif /* MPU6050_H */
