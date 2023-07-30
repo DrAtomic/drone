@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
+#include "freertos/FreeRTOS.h"
+#include <freertos/semphr.h>
 
 #define BURST_LEN 12
 
@@ -38,6 +41,18 @@
 #define MPU6050_FS_SEL_BIT		3
 #define MPU6050_AFS_SEL_BIT		3
 #define MPU6050_CLK_SEL_BIT		0
+
+#define MPU6050_INT_PIN_CFG_REG	0x37
+#define MPU6050_INT_LEVEL_LOW_VAL	1
+#define MPU6050_INT_LEVEL_LOW_BIT	7
+#define MPU6050_LATCH_INT_EN_VAL	1
+#define MPU6050_LATCH_INT_EN_BIT	5
+#define MPU6050_INT_RD_CLEAR_VAL	1
+#define MPU6050_INT_RD_CLEAR_BIT	4
+
+#define MPU6050_DATA_RDY_EN_REG	0x38
+#define MPU6050_DATA_RDY_EN_VAL	1
+#define MPU6050_DATA_RDY_EN_BIT	0
 
 #define MPU6050_CLK_SEL_FIELD_LEN	3
 #define MPU6050_FS_SEL_FIELD_LEN	2
@@ -80,24 +95,30 @@
 #define LSB_SENSITIVITY_GYRO_1000FS	32.8
 #define LSB_SENSITIVITY_GYRO_2000FS	16.4
 
-typedef struct accel_data_type {
+typedef struct accel_type {
 	int16_t x;
 	int16_t y;
 	int16_t z;
-} ACCEL_DATA_TYPE;
+} ACCEL_TYPE;
 
-typedef struct gyro_data_type {
+typedef struct gyro_type {
 	int16_t x;
 	int16_t y;
 	int16_t z;
-} GYRO_DATA_TYPE;
+} GYRO_TYPE;
 
-void mpu6050_setup();
-void get_accel_data(ACCEL_DATA_TYPE *ad);
-void clear_accel_data(ACCEL_DATA_TYPE *ad);
-void get_gyro_data(GYRO_DATA_TYPE *gd);
-void clear_gyro_data(GYRO_DATA_TYPE *gd);
-void get_accel_and_gyro_from_fifo(GYRO_DATA_TYPE *gd, ACCEL_DATA_TYPE *ad);
+typedef struct mpu6050_type {
+	ACCEL_TYPE accl;
+	GYRO_TYPE gyro;
+	uint32_t data_ready;
+} MPU6050_TYPE;
+
+void mpu6050_setup(MPU6050_TYPE *m);
+void get_accel_data(ACCEL_TYPE *ad);
+void clear_accel_data(ACCEL_TYPE *ad);
+void get_gyro_data(GYRO_TYPE *gd);
+void clear_gyro_data(GYRO_TYPE *gd);
+void get_accel_and_gyro_from_fifo(MPU6050_TYPE *m);
 
 /* for testing */
 void peek_reg(uint8_t reg, uint8_t *data);
