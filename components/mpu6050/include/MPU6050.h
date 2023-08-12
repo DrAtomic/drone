@@ -50,16 +50,22 @@
 #define LSB_SENSITIVITY_GYRO_1000FS	32.8
 #define LSB_SENSITIVITY_GYRO_2000FS	16.4
 
+#define AXIS_COUNT 3
+
+typedef enum {
+    X = 0,
+    Y,
+    Z
+} AXIS_ENUM;
+
 typedef struct accel_type {
-	int16_t x;
-	int16_t y;
-	int16_t z;
+	int16_t accel_raw[AXIS_COUNT];
+	float accel[AXIS_COUNT];
 } ACCEL_TYPE;
 
 typedef struct gyro_type {
-	int16_t x;
-	int16_t y;
-	int16_t z;
+	int16_t gyro_raw[AXIS_COUNT];
+	float gyro[AXIS_COUNT];
 } GYRO_TYPE;
 
 typedef struct mpu6050_type {
@@ -68,8 +74,8 @@ typedef struct mpu6050_type {
 } MPU6050_TYPE;
 
 void mpu6050_setup();
-void get_accel(ACCEL_TYPE *ad);
-void get_gyro(GYRO_TYPE *gd);
+void get_accel(ACCEL_TYPE *a);
+void get_gyro(GYRO_TYPE *g);
 void get_mpu(MPU6050_TYPE *m);
 
 /* for testing */

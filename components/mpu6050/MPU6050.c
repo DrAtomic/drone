@@ -126,18 +126,18 @@ static uint16_t read_16bit_reg(uint8_t reg_addr_H)
 	return ret;
 }
 
-void get_accel(ACCEL_TYPE *ad)
+void get_accel(ACCEL_TYPE *a)
 {
-	ad->x = read_16bit_reg(MPU6050_ACCEL_XOUT_H_REG);
-	ad->y = read_16bit_reg(MPU6050_ACCEL_YOUT_H_REG);
-	ad->z = read_16bit_reg(MPU6050_ACCEL_ZOUT_H_REG);
+	a->accel_raw[X] = read_16bit_reg(MPU6050_ACCEL_XOUT_H_REG);
+	a->accel_raw[Y] = read_16bit_reg(MPU6050_ACCEL_YOUT_H_REG);
+	a->accel_raw[Z] = read_16bit_reg(MPU6050_ACCEL_ZOUT_H_REG);
 }
 
-void get_gyro(GYRO_TYPE *gd)
+void get_gyro(GYRO_TYPE *g)
 {
-	gd->x = read_16bit_reg(MPU6050_GYRO_XOUT_H_REG);
-	gd->y = read_16bit_reg(MPU6050_GYRO_YOUT_H_REG);
-	gd->z = read_16bit_reg(MPU6050_GYRO_ZOUT_H_REG);
+	g->gyro_raw[X] = read_16bit_reg(MPU6050_GYRO_XOUT_H_REG);
+	g->gyro_raw[Y] = read_16bit_reg(MPU6050_GYRO_YOUT_H_REG);
+	g->gyro_raw[Z] = read_16bit_reg(MPU6050_GYRO_ZOUT_H_REG);
 }
 
 void get_mpu(MPU6050_TYPE *m)
