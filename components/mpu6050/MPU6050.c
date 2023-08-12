@@ -51,6 +51,7 @@ static void set_register_field(uint8_t reg_addr, uint8_t start_bit, uint8_t val,
 {
 	uint8_t mask = 0;
 	uint8_t data = 0;
+
 	ESP_ERROR_CHECK(mpu6050_register_read(reg_addr, &data, 1));
 	mask = make_mask(start_bit, mask_len);
 	data &= ~(mask);
@@ -114,30 +115,28 @@ static void mpu6050_lowpass_init()
 	set_register(MPU6050_CONFIG_REG, 1);
 }
 
-static uint16_t read_16bit_reg(uint8_t reg_addr_H)
-{
-	uint8_t data[2] = {0};
-	size_t len = 2;
-	uint16_t ret = 0;
-
-	ESP_ERROR_CHECK(mpu6050_register_read(reg_addr_H, data, len));
-	ret |= (data[0] << 8) | data[1];
-
-	return ret;
-}
-
 void get_accel(ACCEL_TYPE *a)
 {
-	a->accel_raw[X] = read_16bit_reg(MPU6050_ACCEL_XOUT_H_REG);
-	a->accel_raw[Y] = read_16bit_reg(MPU6050_ACCEL_YOUT_H_REG);
-	a->accel_raw[Z] = read_16bit_reg(MPU6050_ACCEL_ZOUT_H_REG);
+	uint8_t data[6] = {0};
+	size_t len = 6;
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_H_REG, data, len));
+
+	a->accel_raw[X] = (int16_t)((data[0] << 8) | data[1]);
+	a->accel_raw[Y] = (int16_t)((data[2] << 8) | data[3]);
+	a->accel_raw[Z] = (int16_t)((data[4] << 8) | data[5]);
 }
 
 void get_gyro(GYRO_TYPE *g)
 {
-	g->gyro_raw[X] = read_16bit_reg(MPU6050_GYRO_XOUT_H_REG);
-	g->gyro_raw[Y] = read_16bit_reg(MPU6050_GYRO_YOUT_H_REG);
-	g->gyro_raw[Z] = read_16bit_reg(MPU6050_GYRO_ZOUT_H_REG);
+	uint8_t data[6] = {0};
+	size_t len = 6;
+
+	ESP_ERROR_CHECK(mpu6050_register_read(MPU6050_ACCEL_XOUT_H_REG, data, len));
+
+	g->gyro_raw[X] =(int16_t)((data[0] << 8) | data[1]);
+	g->gyro_raw[Y] =(int16_t)((data[2] << 8) | data[3]);
+	g->gyro_raw[Z] =(int16_t)((data[4] << 8) | data[5]);
 }
 
 void get_mpu(MPU6050_TYPE *m)
@@ -162,6 +161,7 @@ void mpu6050_setup()
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
 		.master.clk_speed = I2C_MASTER_FREQ_HZ,
 	};
+
 	ESP_ERROR_CHECK(i2c_param_config(i2c_master_port, &conf));
 	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port,
 					   conf.mode,
