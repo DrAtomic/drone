@@ -5,28 +5,29 @@
 
 #include "MPU6050.h"
 
+MPU6050_TYPE m;
+
 void setup()
 {
-	mpu6050_setup();
+	mpu6050_setup(&m);
 }
 
 void app_main(void)
 {
 	setup();
-	MPU6050_TYPE m;
 
 	while (1) {
 		get_mpu(&m);
 
 		printf("the acceleration data is x:%.2f, y:%.2f, z:%.2f\n",
-		       m.accl.accel_raw[0] / LSB_SENSITIVITY_ACCEL_2G,
-		       m.accl.accel_raw[1] / LSB_SENSITIVITY_ACCEL_2G,
-		       m.accl.accel_raw[2] / LSB_SENSITIVITY_ACCEL_2G);
+		       m.accl.accel[0],
+		       m.accl.accel[1],
+		       m.accl.accel[2]);
 
 		printf("the gyroscope data is x:%.2f, y:%.2f, z:%.2f\n",
-		       m.gyro.gyro_raw[0] / LSB_SENSITIVITY_GYRO_500FS,
-		       m.gyro.gyro_raw[1] / LSB_SENSITIVITY_GYRO_500FS,
-		       m.gyro.gyro_raw[2] / LSB_SENSITIVITY_GYRO_500FS);
+		       m.gyro.gyro[0],
+		       m.gyro.gyro[1],
+		       m.gyro.gyro[2]);
 
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
