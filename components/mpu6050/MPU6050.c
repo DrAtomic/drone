@@ -164,10 +164,59 @@ void get_gyro(GYRO_TYPE *g)
 		g->gyro[i] = g->gyro_raw[i] / g->gyro_sens.gyro_divider;
 }
 
+static void align_rotation(MPU6050_TYPE *m)
+{
+	const float ax = m->accl.accel[X];
+	const float ay = m->accl.accel[Y];
+	const float az = m->accl.accel[Z];
+
+	const float gx = m->gyro.gyro[X];
+	const float gy = m->gyro.gyro[Y];
+	const float gz = m->gyro.gyro[Z];
+
+	switch (m->alignment) {
+	case CW0_DEG: {
+		m->accl.accel[X] = ax;
+		m->accl.accel[Y] = ay;
+		m->accl.accel[Z] = az;
+
+		m->gyro.gyro[X] = gx;
+		m->gyro.gyro[Y] = gy;
+		m->gyro.gyro[Z] = gz;
+		break;
+	}
+	case CW90_DEG: {
+		m->accl.accel[X] = ay;
+		m->accl.accel[Y] = -ax;
+		m->accl.accel[Z] = az;
+
+		m->gyro.gyro[X] = gy;
+		m->gyro.gyro[Y] = -gx;
+		m->gyro.gyro[Z] = gz;
+		break;
+	}
+	case PERP0_DEG: {
+		m->accl.accel[X] = -az;
+		m->accl.accel[Y] = ay;
+		m->accl.accel[Z] = ax;
+
+		m->gyro.gyro[X] = -gz;
+		m->gyro.gyro[Y] = gy;
+		m->gyro.gyro[Z] = gx;
+		break;
+	}
+	default:
+		printf("error: no proper alignment\n");
+		break;
+	}
+}
+
 void get_mpu(MPU6050_TYPE *m)
 {
 	get_accel(&m->accl);
 	get_gyro(&m->gyro);
+
+	align_rotation(m);
 }
 
 void peek_reg(uint8_t reg, uint8_t *data)
@@ -193,7 +242,7 @@ void mpu6050_setup(MPU6050_TYPE *m)
 					   I2C_MASTER_RX_BUF_DISABLE,
 					   I2C_MASTER_TX_BUF_DISABLE,
 					   0));
-	m->alignment = CW90_DEG;
+	m->alignment = PERP0_DEG;
 
 	mpu6050_check();
 	mpu6050_reset();

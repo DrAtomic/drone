@@ -83,7 +83,8 @@ typedef struct gyro_type {
 
 typedef enum {
 	CW0_DEG = 1,
-	CW90_DEG = 2
+	CW90_DEG = 2,
+	PERP0_DEG = 3
 } ALIGNMENT_ENUM;
 
 typedef struct mpu6050_type {
